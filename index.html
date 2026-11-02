@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彩票开奖数据速查</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Microsoft YaHei", sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 30px; }
+  header h1 { font-size: 24px; font-weight: 600; }
+  header p { color: #888; font-size: 13px; margin-top: 6px; }
+  .game {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .game h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  th { background: #fafafa; font-weight: 600; color: #666; font-size: 13px; }
+  td.numbers { font-family: Consolas, monospace; letter-spacing: 1px; word-break: break-all; }
+  footer {
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    margin-top: 30px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>彩票开奖数据速查</h1>
+    <p>仅展示双色球 / 大乐透 / 快乐8 最近 16 期公开开奖结果</p>
+  </header>
+
+  <div class="game">
+    <h2>双色球</h2>
+    <table>
+      <thead><tr><th>日期</th><th>期号</th><th>开奖号码</th></tr></thead>
+      <tbody id="ssq-body"></tbody>
+    </table>
+  </div>
+
+  <div class="game">
+    <h2>大乐透</h2>
+    <table>
+      <thead><tr><th>日期</th><th>期号</th><th>开奖号码</th></tr></thead>
+      <tbody id="dlt-body"></tbody>
+    </table>
+  </div>
+
+  <div class="game">
+    <h2>快乐8</h2>
+    <table>
+      <thead><tr><th>日期</th><th>期号</th><th>开奖号码</th></tr></thead>
+      <tbody id="kl8-body"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    彩票开奖为随机事件，本站仅整理公开开奖数据，仅供数据记录查阅，不构成购彩建议。
+  </footer>
+</div>
+
+<script>
+// ==================================================
+// ★★★ 你每天只需要改下面这一段 ★★★
+//
+// 操作规则：
+//   每出一期新开奖，就把下面对应彩种的数组里
+//   【最上面】紧贴 [ 的那一行，复制一份，改成新一期的日期/期号/号码
+//   也就是：新记录永远插在数组最顶端，不要加在末尾。
+//
+// 格式要求（标点、空格都照抄，不要改）：
+//   { date: "2026-11-02", qihao: "26128", numbers: "01 05 12 18 22 28 + 07" },
+//
+//   date   = 开奖日期，格式 年-月-日
+//   qihao  = 期号
+//   numbers= 开奖号码，号码之间用空格隔开；
+//            双色球红球和蓝球之间用 " + " 隔开；
+//            大乐透前区和后区之间用 " + " 隔开；
+//            快乐8就把20个号码用空格连起来。
+//
+// 注意：数组里想存多少期都行，网页自动只显示最新16条，
+//       超出16期的旧记录你不用删，放着即可。
+// ==================================================
+
+const data = {
+
+  ssq: [   // ← 双色球从这里开始
+    { date: "2026-11-02", qihao: "26128", numbers: "01 05 12 18 22 28 + 07" },
+    { date: "2026-10-30", qihao: "26127", numbers: "03 08 14 19 25 30 + 12" },
+    { date: "2026-10-27", qihao: "26126", numbers: "02 09 15 21 27 33 + 04" },
+    { date: "2026-10-25", qihao: "26125", numbers: "05 11 16 20 26 31 + 09" },
+    { date: "2026-10-23", qihao: "26124", numbers: "01 07 13 17 24 29 + 15" }
+  ],       // ← 双色球到这里结束
+
+  dlt: [   // ← 大乐透从这里开始
+    { date: "2026-11-01", qihao: "26128", numbers: "04 11 19 25 32 + 03 11" },
+    { date: "2026-10-29", qihao: "26127", numbers: "02 08 15 22 30 + 06 12" },
+    { date: "2026-10-26", qihao: "26126", numbers: "05 10 18 27 33 + 02 09" },
+    { date: "2026-10-24", qihao: "26125", numbers: "01 09 14 21 28 + 05 10" }
+  ],       // ← 大乐透到这里结束
+
+  kl8: [   // ← 快乐8从这里开始（每天开奖）
+    { date: "2026-11-02", qihao: "26295", numbers: "03 08 12 15 19 22 25 28 31 35 38 42 45 48 52 55 58 61 65 70" },
+    { date: "2026-11-01", qihao: "26294", numbers: "01 06 11 14 18 23 26 29 33 36 40 44 47 50 53 57 60 63 66 72" }
+  ]        // ← 快乐8到这里结束
+};
+
+// ==================================================
+// ★★★ 下面这一段是网页自动渲染逻辑，你永远不要动 ★★★
+// ==================================================
+
+function render(tbodyId, list) {
+  const tbody = document.getElementById(tbodyId);
+  const recent = list.slice(0, 16);   // 只取最新16条
+  tbody.innerHTML = recent.map(function(row) {
+    return '<tr>' +
+      '<td>' + row.date + '</td>' +
+      '<td>' + row.qihao + '</td>' +
+      '<td class="numbers">' + row.numbers + '</td>' +
+    '</tr>';
+  }).join('');
+}
+render('ssq-body', data.ssq);
+render('dlt-body', data.dlt);
+render('kl8-body', data.kl8);
+</script>
+</body>
+</html>
